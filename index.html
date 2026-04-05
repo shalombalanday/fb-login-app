@@ -10,8 +10,11 @@
 
 <button onclick="login()">Login with Facebook</button>
 
+<br><br>
+
 <div id="status"></div>
 <div id="pages"></div>
+<div id="connected"></div>
 
 <script>
 const APP_ID = "976267695082878";
@@ -21,6 +24,7 @@ const REDIRECT_URI = encodeURIComponent(
   "https://shalombalanday.github.io/fb-login-app/"
 );
 
+// LOGIN FUNCTION
 function login() {
   const url =
     "https://www.facebook.com/v19.0/dialog/oauth" +
@@ -37,13 +41,14 @@ function login() {
 window.onload = function () {
   if (window.location.hash.includes("access_token")) {
 
+    document.getElementById("status").innerHTML = "⏳ Fetching your Pages...";
+
     const token = window.location.hash
       .substring(1)
       .split("&")
       .find(x => x.startsWith("access_token"))
       .split("=")[1];
 
-    document.getElementById("status").innerHTML = "✅ Logged in!";
     getPages(token);
   }
 };
@@ -55,24 +60,31 @@ function getPages(token) {
     .then(res => res.json())
     .then(data => {
 
-      let html = "<h3>Select your Page:</h3>";
+      let html = "<h3>Select a Facebook Page (retrieved from your account)</h3>";
 
       data.data.forEach(page => {
         html += `
           <button onclick="selectPage('${page.id}', '${page.access_token}', '${page.name}')">
-            ${page.name}
+            ${page.name} (ID: ${page.id})
           </button><br><br>
         `;
       });
 
       document.getElementById("pages").innerHTML = html;
+      document.getElementById("status").innerHTML = "✅ Pages loaded successfully!";
     });
 }
 
 
+// SELECT PAGE
 function selectPage(pageId, pageToken, pageName) {
-  document.getElementById("status").innerHTML =
-    "✅ Connected to: " + pageName;
+  document.getElementById("connected").innerHTML = `
+    <h3>Connected Page</h3>
+    <p><strong>${pageName}</strong></p>
+    <p>Status: Active</p>
+  `;
+
+  document.getElementById("status").innerHTML = "✅ Page successfully connected!";
 
   console.log("SAVE THIS:", pageId, pageToken);
 }
