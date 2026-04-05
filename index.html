@@ -86,7 +86,8 @@
         document.getElementById("status").innerHTML = "❌ Login cancelled";
       }
     }, {
-      scope: 'pages_show_list'
+      scope: 'pages_show_list,pages_read_engagement,pages_manage_metadata',
+      auth_type: 'rerequest'
     });
   }
 
