@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Connect Facebook Page</title>
+</head>
+
+<body>
+
+<h2>Connect Your Facebook Page</h2>
+
+<button onclick="login()">Login with Facebook</button>
+
+<div id="status"></div>
+<div id="pages"></div>
+
+<script>
+const APP_ID = "976267695082878";
+
+// 🔥 REPLACE WITH YOUR GITHUB URL
+const REDIRECT_URI = encodeURIComponent(
+  "https://yourusername.github.io/fb-login-app/"
+);
+
+function login() {
+  const url =
+    "https://www.facebook.com/v19.0/dialog/oauth" +
+    "?client_id=" + APP_ID +
+    "&redirect_uri=" + REDIRECT_URI +
+    "&scope=pages_show_list,pages_messaging" +
+    "&response_type=token";
+
+  window.location.href = url;
+}
+
+
+// AFTER LOGIN
+window.onload = function () {
+  if (window.location.hash.includes("access_token")) {
+
+    const token = window.location.hash
+      .substring(1)
+      .split("&")
+      .find(x => x.startsWith("access_token"))
+      .split("=")[1];
+
+    document.getElementById("status").innerHTML = "✅ Logged in!";
+    getPages(token);
+  }
+};
+
+
+// GET PAGES
+function getPages(token) {
+  fetch("https://graph.facebook.com/v19.0/me/accounts?access_token=" + token)
+    .then(res => res.json())
+    .then(data => {
+
+      let html = "<h3>Select your Page:</h3>";
+
+      data.data.forEach(page => {
+        html += `
+          <button onclick="selectPage('${page.id}', '${page.access_token}', '${page.name}')">
+            ${page.name}
+          </button><br><br>
+        `;
+      });
+
+      document.getElementById("pages").innerHTML = html;
+    });
+}
+
+
+function selectPage(pageId, pageToken, pageName) {
+  document.getElementById("status").innerHTML =
+    "✅ Connected to: " + pageName;
+
+  console.log("SAVE THIS:", pageId, pageToken);
+}
+</script>
+
+</body>
+</html>
