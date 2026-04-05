@@ -6,7 +6,7 @@
 
 <body>
 
-<h2>Connect Your Facebook Page</h2>
+<h2>Connect Your Facebook Page 2</h2>
 
 <button onclick="login()">Login with Facebook</button>
 
@@ -18,17 +18,17 @@
 
 <script>
 const APP_ID = "976267695082878";
+const REDIRECT_URI = "https://shalombalanday.github.io/fb-login-app/";
 
-const REDIRECT_URI = encodeURIComponent(
-  "https://shalombalanday.github.io/fb-login-app/"
-);
-
-// LOGIN (FORCE PERMISSION)
+// LOGIN (BEST PRACTICE FOR FRONTEND)
 function login() {
+  // Clear old token to avoid reuse issues
+  localStorage.removeItem("fb_token");
+
   const url =
     "https://www.facebook.com/v19.0/dialog/oauth" +
     "?client_id=" + APP_ID +
-    "&redirect_uri=" + REDIRECT_URI +
+    "&redirect_uri=" + encodeURIComponent(REDIRECT_URI) +
     "&scope=pages_show_list,pages_messaging" +
     "&response_type=token" +
     "&auth_type=rerequest" +
@@ -38,23 +38,32 @@ function login() {
 }
 
 
-// AFTER LOGIN
+// HANDLE TOKEN
 window.onload = function () {
 
+  // Extract token from URL hash
   if (window.location.hash.includes("access_token")) {
 
-    const token = window.location.hash
-      .substring(1)
-      .split("&")
-      .find(x => x.startsWith("access_token"))
-      .split("=")[1];
+    const params = new URLSearchParams(window.location.hash.substring(1));
+    const token = params.get("access_token");
+
+    if (!token) {
+      document.getElementById("status").innerHTML = "❌ Failed to get token";
+      return;
+    }
 
     console.log("TOKEN:", token);
 
+    // Save token
     localStorage.setItem("fb_token", token);
+
+    // Clean URL (important for GitHub Pages)
+    window.history.replaceState({}, document.title, REDIRECT_URI);
+
     loadPages(token);
 
   } else {
+    // Try existing token
     const savedToken = localStorage.getItem("fb_token");
 
     if (savedToken) {
@@ -67,35 +76,39 @@ window.onload = function () {
 // LOAD PAGES
 function loadPages(token) {
   document.getElementById("status").innerHTML = "⏳ Fetching your Pages...";
-  getPages(token);
-}
 
-
-// GET PAGES (WITH DEBUG)
-function getPages(token) {
   fetch("https://graph.facebook.com/v19.0/me/accounts?access_token=" + token)
     .then(res => res.json())
     .then(data => {
 
-      console.log("FULL API RESPONSE:", data);
+      console.log("API RESPONSE:", data);
 
       const container = document.getElementById("pages");
-      container.innerHTML = "<h3>Select a Facebook Page (retrieved from your account)</h3>";
+      container.innerHTML = "<h3>Select a Facebook Page</h3>";
 
-      // 🔥 SHOW RAW DATA ON SCREEN
-      container.innerHTML += "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+      // HANDLE ERROR
+      if (data.error) {
+        container.innerHTML += "<p>❌ Error: " + data.error.message + "</p>";
+        document.getElementById("status").innerHTML = "❌ Failed to load Pages";
+        return;
+      }
 
-      // ❌ If no pages
+      // NO PAGES CASE
       if (!data.data || data.data.length === 0) {
         container.innerHTML += `
-          <p>⚠️ No Pages returned by Facebook.</p>
-          <p>Please re-login and make sure to allow access to your Pages.</p>
+          <p>⚠️ No Pages found.</p>
+          <p>Please ensure:</p>
+          <ul>
+            <li>You are a Page admin</li>
+            <li>You selected Pages during login</li>
+            <li>You granted all permissions</li>
+          </ul>
         `;
         document.getElementById("status").innerHTML = "❌ No Pages available";
         return;
       }
 
-      // ✅ Show buttons
+      // SHOW PAGES
       data.data.forEach(page => {
 
         const btn = document.createElement("button");
@@ -113,16 +126,14 @@ function getPages(token) {
       document.getElementById("status").innerHTML = "✅ Pages loaded successfully!";
     })
     .catch(err => {
-      document.getElementById("status").innerHTML = "❌ Error loading pages";
       console.error(err);
+      document.getElementById("status").innerHTML = "❌ Network error";
     });
 }
 
 
 // SELECT PAGE
 function selectPage(pageId, pageToken, pageName) {
-
-  console.log("CLICK WORKED:", pageName);
 
   document.getElementById("connected").innerHTML = `
     <h3>Connected Page</h3>
