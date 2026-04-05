@@ -6,7 +6,7 @@
 
 <body>
 
-<h2>Connect Your Facebook Page 2</h2>
+<h2>Connect Your Facebook Page 3</h2>
 
 <button onclick="login()">Login with Facebook</button>
 
@@ -30,7 +30,7 @@ function login() {
     "?client_id=" + APP_ID +
     "&redirect_uri=" + encodeURIComponent(REDIRECT_URI) +
     "&scope=pages_show_list,pages_messaging" +
-    "&response_type=token" +
+    "&response_type=code" +
     "&auth_type=rerequest" +
     "&prompt=consent";
 
