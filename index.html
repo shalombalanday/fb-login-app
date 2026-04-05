@@ -19,12 +19,11 @@
 <script>
 const APP_ID = "976267695082878";
 
-// 🔥 REPLACE WITH YOUR GITHUB URL
 const REDIRECT_URI = encodeURIComponent(
   "https://shalombalanday.github.io/fb-login-app/"
 );
 
-// LOGIN FUNCTION
+// LOGIN
 function login() {
   const url =
     "https://www.facebook.com/v19.0/dialog/oauth" +
@@ -36,7 +35,8 @@ function login() {
 
   window.location.href = url;
 }
-  
+
+
 // AFTER LOGIN
 window.onload = function () {
   if (window.location.hash.includes("access_token")) {
@@ -60,17 +60,24 @@ function getPages(token) {
     .then(res => res.json())
     .then(data => {
 
-      let html = "<h3>Select a Facebook Page (retrieved from your account)</h3>";
+      const container = document.getElementById("pages");
+      container.innerHTML = "<h3>Select a Facebook Page (retrieved from your account)</h3>";
 
       data.data.forEach(page => {
-        html += `
-          <button onclick="selectPage('${page.id}', '${page.access_token}', \`${page.name}\`)">
-            ${page.name} (ID: ${page.id})
-          </button><br><br>
-        `;
+
+        const btn = document.createElement("button");
+        btn.innerText = `${page.name} (ID: ${page.id})`;
+
+        // ✅ SAFE CLICK HANDLER (FIXED)
+        btn.onclick = function () {
+          selectPage(page.id, page.access_token, page.name);
+        };
+
+        container.appendChild(btn);
+        container.appendChild(document.createElement("br"));
+        container.appendChild(document.createElement("br"));
       });
 
-      document.getElementById("pages").innerHTML = html;
       document.getElementById("status").innerHTML = "✅ Pages loaded successfully!";
     })
     .catch(err => {
@@ -80,7 +87,7 @@ function getPages(token) {
 }
 
 
-// SELECT PAGE (FIXED)
+// SELECT PAGE
 function selectPage(pageId, pageToken, pageName) {
 
   console.log("CLICK WORKED:", pageName);
@@ -93,7 +100,6 @@ function selectPage(pageId, pageToken, pageName) {
 
   document.getElementById("status").innerHTML = "✅ Page successfully connected!";
 
-  // Optional: store in browser (for demo)
   localStorage.setItem("page_id", pageId);
   localStorage.setItem("page_token", pageToken);
   localStorage.setItem("page_name", pageName);
