@@ -23,7 +23,7 @@ const REDIRECT_URI = encodeURIComponent(
   "https://shalombalanday.github.io/fb-login-app/"
 );
 
-// LOGIN
+// LOGIN (FORCE PERMISSION)
 function login() {
   const url =
     "https://www.facebook.com/v19.0/dialog/oauth" +
@@ -31,7 +31,8 @@ function login() {
     "&redirect_uri=" + REDIRECT_URI +
     "&scope=pages_show_list,pages_messaging" +
     "&response_type=token" +
-    "&auth_type=rerequest";
+    "&auth_type=rerequest" +
+    "&prompt=consent";
 
   window.location.href = url;
 }
@@ -39,9 +40,8 @@ function login() {
 
 // AFTER LOGIN
 window.onload = function () {
-  if (window.location.hash.includes("access_token")) {
 
-    document.getElementById("status").innerHTML = "⏳ Fetching your Pages...";
+  if (window.location.hash.includes("access_token")) {
 
     const token = window.location.hash
       .substring(1)
@@ -49,26 +49,58 @@ window.onload = function () {
       .find(x => x.startsWith("access_token"))
       .split("=")[1];
 
-    getPages(token);
+    console.log("TOKEN:", token);
+
+    localStorage.setItem("fb_token", token);
+    loadPages(token);
+
+  } else {
+    const savedToken = localStorage.getItem("fb_token");
+
+    if (savedToken) {
+      loadPages(savedToken);
+    }
   }
 };
 
 
-// GET PAGES
+// LOAD PAGES
+function loadPages(token) {
+  document.getElementById("status").innerHTML = "⏳ Fetching your Pages...";
+  getPages(token);
+}
+
+
+// GET PAGES (WITH DEBUG)
 function getPages(token) {
   fetch("https://graph.facebook.com/v19.0/me/accounts?access_token=" + token)
     .then(res => res.json())
     .then(data => {
 
+      console.log("FULL API RESPONSE:", data);
+
       const container = document.getElementById("pages");
       container.innerHTML = "<h3>Select a Facebook Page (retrieved from your account)</h3>";
 
+      // 🔥 SHOW RAW DATA ON SCREEN
+      container.innerHTML += "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+
+      // ❌ If no pages
+      if (!data.data || data.data.length === 0) {
+        container.innerHTML += `
+          <p>⚠️ No Pages returned by Facebook.</p>
+          <p>Please re-login and make sure to allow access to your Pages.</p>
+        `;
+        document.getElementById("status").innerHTML = "❌ No Pages available";
+        return;
+      }
+
+      // ✅ Show buttons
       data.data.forEach(page => {
 
         const btn = document.createElement("button");
-        btn.innerText = `${page.name} (ID: ${page.id})`;
+        btn.innerText = page.name + " (ID: " + page.id + ")";
 
-        // ✅ SAFE CLICK HANDLER (FIXED)
         btn.onclick = function () {
           selectPage(page.id, page.access_token, page.name);
         };
