@@ -64,7 +64,7 @@ function getPages(token) {
 
       data.data.forEach(page => {
         html += `
-          <button onclick="selectPage('${page.id}', '${page.access_token}', '${page.name}')">
+          <button onclick="selectPage('${page.id}', '${page.access_token}', \`${page.name}\`)">
             ${page.name} (ID: ${page.id})
           </button><br><br>
         `;
@@ -72,12 +72,19 @@ function getPages(token) {
 
       document.getElementById("pages").innerHTML = html;
       document.getElementById("status").innerHTML = "✅ Pages loaded successfully!";
+    })
+    .catch(err => {
+      document.getElementById("status").innerHTML = "❌ Error loading pages";
+      console.error(err);
     });
 }
 
 
-// SELECT PAGE
+// SELECT PAGE (FIXED)
 function selectPage(pageId, pageToken, pageName) {
+
+  console.log("CLICK WORKED:", pageName);
+
   document.getElementById("connected").innerHTML = `
     <h3>Connected Page</h3>
     <p><strong>${pageName}</strong></p>
@@ -86,7 +93,10 @@ function selectPage(pageId, pageToken, pageName) {
 
   document.getElementById("status").innerHTML = "✅ Page successfully connected!";
 
-  console.log("SAVE THIS:", pageId, pageToken);
+  // Optional: store in browser (for demo)
+  localStorage.setItem("page_id", pageId);
+  localStorage.setItem("page_token", pageToken);
+  localStorage.setItem("page_name", pageName);
 }
 </script>
 
