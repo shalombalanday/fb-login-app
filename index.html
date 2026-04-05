@@ -2,93 +2,127 @@
 <html>
 <head>
   <title>Connect Facebook Page</title>
-</head>
+  <script async defer crossorigin="anonymous"
+    src="https://connect.facebook.net/en_US/sdk.js"></script>
 
+  <style>
+    body {
+      font-family: Arial;
+      background: #f4f6f8;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 400px;
+      margin: auto;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      background: #1877f2;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .page {
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .page:hover {
+      background: #f0f2f5;
+    }
+
+    .selected {
+      border: 2px solid #1877f2;
+      background: #e7f0ff;
+    }
+
+    .error {
+      color: red;
+    }
+  </style>
+</head>
 <body>
 
-<h2>Connect Your Facebook Page 4</h2>
+<div class="container">
+  <h2>Connect Your Facebook Page 5</h2>
 
-<button onclick="login()">Login with Facebook</button>
+  <button onclick="login()">Login with Facebook</button>
 
-<br><br>
+  <div id="status"></div>
 
-<div id="status"></div>
-<div id="pages"></div>
-<div id="connected"></div>
+  <h3>Select a Facebook Page</h3>
+  <div id="pages"></div>
+</div>
 
 <script>
-const APP_ID = "976267695082878";
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '976267695082878',
+      cookie     : true,
+      xfbml      : true,
+      version    : 'v19.0'
+    });
+  };
 
-const REDIRECT_URI = encodeURIComponent(
-  "https://shalombalanday.github.io/fb-login-app/"
-);
-
-// LOGIN
-function login() {
-  const url =
-    "https://www.facebook.com/v19.0/dialog/oauth" +
-    "?client_id=" + APP_ID +
-    "&redirect_uri=" + REDIRECT_URI +
-    "&scope=pages_show_list,pages_messaging" +
-    "&response_type=token" +
-    "&auth_type=rerequest" +
-    "&prompt=consent";
-
-  window.location.href = url;
-}
-
-
-// AFTER LOGIN
-window.onload = function () {
-
-  if (window.location.hash.includes("access_token")) {
-
-    document.getElementById("status").innerHTML = "⏳ Fetching your Pages...";
-
-    // 👉 Simulate loading delay (feels real)
-    setTimeout(showPages, 1000);
+  function login() {
+    FB.login(function(response) {
+      if (response.authResponse) {
+        document.getElementById("status").innerHTML = "✅ Logged in!";
+        getPages();
+      } else {
+        document.getElementById("status").innerHTML = "❌ Login cancelled";
+      }
+    }, {
+      scope: 'pages_show_list'
+    });
   }
-};
 
+  function getPages() {
+    FB.api('/me/accounts', function(response) {
+      const pagesDiv = document.getElementById("pages");
+      pagesDiv.innerHTML = "";
 
-// CONTROLLED PAGE LIST
-function showPages() {
+      if (!response || response.error) {
+        pagesDiv.innerHTML = '<p class="error">❌ Failed to load Pages</p>';
+        console.error(response.error);
+        return;
+      }
 
-  const container = document.getElementById("pages");
+      if (response.data.length === 0) {
+        pagesDiv.innerHTML = '<p>⚠️ No Pages found</p>';
+        return;
+      }
 
-  container.innerHTML = `
-    <h3>Select a Facebook Page</h3>
+      response.data.forEach(page => {
+        const div = document.createElement("div");
+        div.className = "page";
+        div.innerHTML = `<strong>${page.name}</strong><br>ID: ${page.id}`;
 
-    <button onclick="selectPage('1','token','ROXCA Realty')">
-      ROXCA Realty
-    </button>
-    <br><br>
+        div.onclick = function() {
+          document.querySelectorAll('.page').forEach(p => p.classList.remove('selected'));
+          div.classList.add('selected');
 
-    <button onclick="selectPage('2','token','SMDC Condo Listings')">
-      SMDC Condo Listings
-    </button>
-    <br><br>
+          document.getElementById("status").innerHTML =
+            `✅ Selected Page: ${page.name}`;
+        };
 
-    <button onclick="selectPage('3','token','Sample Demo Page')">
-      Sample Demo Page
-    </button>
-  `;
-
-  document.getElementById("status").innerHTML = "✅ Pages loaded successfully!";
-}
-
-
-// SELECT PAGE
-function selectPage(pageId, pageToken, pageName) {
-
-  document.getElementById("connected").innerHTML = `
-    <h3>Connected Page</h3>
-    <p><strong>${pageName}</strong></p>
-    <p>Status: Active</p>
-  `;
-
-  document.getElementById("status").innerHTML = "✅ Page successfully connected!";
-}
+        pagesDiv.appendChild(div);
+      });
+    });
+  }
 </script>
 
 </body>
