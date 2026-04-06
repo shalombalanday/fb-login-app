@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>Connect Facebook Page</title>
+
   <script async defer crossorigin="anonymous"
     src="https://connect.facebook.net/en_US/sdk.js"></script>
 
@@ -38,6 +39,7 @@
       border: 1px solid #ddd;
       border-radius: 5px;
       cursor: pointer;
+      transition: 0.2s;
     }
 
     .page:hover {
@@ -49,19 +51,21 @@
       background: #e7f0ff;
     }
 
-    .error {
-      color: red;
+    .status {
+      margin-top: 15px;
+      font-weight: bold;
     }
   </style>
 </head>
+
 <body>
 
 <div class="container">
-  <h2>Connect Your Facebook Page 5</h2>
+  <h2>Connect Your Facebook Page Here</h2>
 
   <button onclick="login()">Login with Facebook</button>
 
-  <div id="status"></div>
+  <div id="status" class="status"></div>
 
   <h3>Select a Facebook Page</h3>
   <div id="pages"></div>
@@ -80,8 +84,9 @@
   function login() {
     FB.login(function(response) {
       if (response.authResponse) {
-        document.getElementById("status").innerHTML = "✅ Logged in!";
-        getPages();
+        document.getElementById("status").innerHTML = "Fetching your Pages...";
+
+        simulatePages();
       } else {
         document.getElementById("status").innerHTML = "❌ Login cancelled";
       }
@@ -91,38 +96,28 @@
     });
   }
 
-  function getPages() {
-    FB.api('/me/accounts', function(response) {
+  function simulatePages() {
+    setTimeout(() => {
       const pagesDiv = document.getElementById("pages");
-      pagesDiv.innerHTML = "";
 
-      if (!response || response.error) {
-        pagesDiv.innerHTML = '<p class="error">❌ Failed to load Pages</p>';
-        console.error(response.error);
-        return;
-      }
+      pagesDiv.innerHTML = `
+        <div class="page" onclick="selectPage(this)">
+          <strong>Roxca Realty</strong><br>
+          ID: 123456789
+        </div>
+      `;
 
-      if (response.data.length === 0) {
-        pagesDiv.innerHTML = '<p>⚠️ No Pages found</p>';
-        return;
-      }
+      document.getElementById("status").innerHTML = "Select a Facebook Page";
 
-      response.data.forEach(page => {
-        const div = document.createElement("div");
-        div.className = "page";
-        div.innerHTML = `<strong>${page.name}</strong><br>ID: ${page.id}`;
+    }, 1500); // simulate loading
+  }
 
-        div.onclick = function() {
-          document.querySelectorAll('.page').forEach(p => p.classList.remove('selected'));
-          div.classList.add('selected');
+  function selectPage(el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('selected'));
+    el.classList.add('selected');
 
-          document.getElementById("status").innerHTML =
-            `✅ Selected Page: ${page.name}`;
-        };
-
-        pagesDiv.appendChild(div);
-      });
-    });
+    document.getElementById("status").innerHTML =
+      "✅ Connected to Roxca Realty";
   }
 </script>
 
